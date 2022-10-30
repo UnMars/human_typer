@@ -4,16 +4,16 @@ Python package to simulate human keyboard typing
 
 ## Installation
 
-Use the package manager [pip](https://pypi.org/project/human-typer/) to install human-typer.
+Use the package manager [pip](https://pypi.org/project/human_typer/) to install human-typer.
 
 ```bash
-pip install human-typer
+pip install human_typer
 ```
 
 ## Usage
 
 ```python
-from human-typer import Human_typer
+from human_typer import Human_typer
 
 My_Typer = Human_typer(keyboard_layout = "qwerty", average_cpm = 190)
 
