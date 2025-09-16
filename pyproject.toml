@@ -47,6 +47,9 @@ dev = [
     "black>=21.0",
     "flake8>=3.8",
 ]
+playwright = [
+    "playwright>=1.40.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/UnMars/human_typer"

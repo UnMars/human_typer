@@ -8,6 +8,13 @@ from keyboard_helper import Keyboard
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
+try:
+    from playwright.sync_api import Locator
+
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+
 
 class Human_typer:
     """Class for the Human like typer
@@ -15,20 +22,37 @@ class Human_typer:
     :Args:
         - keyboard_layout : str = "qwerty" or "azerty" (default:qwerty)
         - average_cpm : float (default:190 (Median CPM))
+        - element_type : str = "selenium" or "playwright" (default:selenium)
 
     Example :
     ```python
     My_Typer = Human_typer("azerty", 70)
+
+    # Explicit Selenium mode
+    My_Typer = Human_typer("azerty", 70, element_type="selenium")
+
+    # Playwright mode
+    My_Typer = Human_typer("azerty", 70, element_type="playwright")
     ```
     """
 
     def __init__(
-        self, keyboard_layout: str = "qwerty", average_cpm: float = 190
+        self,
+        keyboard_layout: str = "qwerty",
+        average_cpm: float = 190,
+        element_type: str = "selenium",
     ) -> None:
         self.cpm_range = (
             round(60 / (3.2 * average_cpm), 3),
             round(60 / (0.8 * average_cpm), 3),
         )
+        self.element_type = element_type
+        if self.element_type not in {"selenium", "playwright"}:
+            raise ValueError("element_type must be 'selenium' or 'playwright'")
+        if self.element_type == "playwright" and not PLAYWRIGHT_AVAILABLE:
+            raise ImportError(
+                "Playwright is not installed. Install it with: pip install human_typer[playwright]"
+            )
         self.qwerty_min = Keyboard.from_grid(
             """
             ` 1 2 3 4 5 6 7 8 9 0 - =
@@ -181,48 +205,65 @@ class Human_typer:
 
             sleep(uniform(self.cpm_range[0], self.cpm_range[1]))
 
-    def type_in_element(self, text: str, element: WebElement) -> None:
-        """Type the text given in the element given like an human
+    def type_in_element(self, text: str, element: WebElement | Locator) -> None:
+        """Type the text given in the element like a human
 
         :Args:
             - text - Text to type like a human
-            - element - Selenium element to type the text into
+            - element - Selenium WebElement or Playwright Locator
 
         :Usage:
         ```
-        element = driver.find_element_by_ID(element_id)
-        type_in_element(my_text, element)
+        # Selenium mode (default)
+        typer = Human_typer(element_type="selenium")
+        typer.type_in_element(my_text, selenium_element)
+
+        # Playwright mode
+        typer = Human_typer(element_type="playwright")
+        typer.type_in_element(my_text, playwright_element)
         ```
 
         :rtype: None
         """
+
+        def type_char(char: str):
+            if self.element_type == "selenium":
+                element.send_keys(char)
+            else:  # playwright
+                element.type(char)
+
+        def press_backspace():
+            if self.element_type == "selenium":
+                element.send_keys(Keys.BACKSPACE)
+            else:  # playwright
+                element.press("Backspace")
+
         new_text, modification_list = self.make_voluntary_error(text)
         index_to_look_at, index_to_look_at_type = [], []
         for elem in modification_list:
             index_to_look_at.append(elem[0])
             index_to_look_at_type.append(elem[3])
+
         for index in range(len(text)):
             if index in index_to_look_at:
-                if (
-                    index_to_look_at_type[index_to_look_at.index(index)]
-                    == "MODIFY"
-                ):
-                    element.send_keys(new_text[index])
-                    sleep(uniform(0.4, 0.5))
-                    element.send_keys(Keys.BACKSPACE)
-                    sleep(uniform(0.4, 0.45))
-                    element.send_keys(text[index])
+                error_type = index_to_look_at_type[
+                    index_to_look_at.index(index)
+                ]
 
-                elif (
-                    index_to_look_at_type[index_to_look_at.index(index)]
-                    == "ADD"
-                ):
-                    element.send_keys(text[index])
-                    sleep(uniform(self.cpm_range[0], self.cpm_range[1]))
-                    element.send_keys(new_text[index])
+                if error_type == "MODIFY":
+                    type_char(new_text[index])
                     sleep(uniform(0.4, 0.5))
-                    element.send_keys(Keys.BACKSPACE)
+                    press_backspace()
+                    sleep(uniform(0.4, 0.45))
+                    type_char(text[index])
+
+                elif error_type == "ADD":
+                    type_char(text[index])
+                    sleep(uniform(self.cpm_range[0], self.cpm_range[1]))
+                    type_char(new_text[index])
+                    sleep(uniform(0.4, 0.5))
+                    press_backspace()
             else:
-                element.send_keys(text[index])
+                type_char(text[index])
 
             sleep(uniform(self.cpm_range[0], self.cpm_range[1]))
