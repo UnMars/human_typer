@@ -23,11 +23,11 @@ class Human_typer:
     """
 
     def __init__(
-        self, keyboard_layout: str = "qwerty", average_wpm: float = 190
+        self, keyboard_layout: str = "qwerty", average_cpm: float = 190
     ) -> None:
         self.cpm_range = (
-            round(60 / (3.2 * average_wpm), 3),
-            round(60 / (0.8 * average_wpm), 3),
+            round(60 / (3.2 * average_cpm), 3),
+            round(60 / (0.8 * average_cpm), 3),
         )
         self.qwerty_min = Keyboard.from_grid(
             """
