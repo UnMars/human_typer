@@ -1,10 +1,13 @@
-from typing import Dict, List, Tuple, Union
+"""Keyboard helper class."""
+
 import collections
 import itertools
 import textwrap
 
+
 class Keyboard(collections.UserDict):
-    """"""
+    """Keyboard helper class."""
+
     @property
     def n_rows(self):
         return int(max(pos.real for pos in self.values()) + 1)
@@ -21,20 +24,22 @@ class Keyboard(collections.UserDict):
         """Euclidean distance between two characters."""
         return abs(self[c1] - self[c2]) if c1 != c2 else 0.0
 
-
     def typing_distance(self, word: str) -> float:
-        return sum(self.char_distance(c1, c2) for c1, c2 in zip(word, word[1:]))
+        return sum(
+            itertools.starmap(
+                self.char_distance, zip(word, word[1:], strict=False)
+            )
+        )
 
     @classmethod
     def from_coordinates(
         cls,
-        coordinates: Dict[str, Tuple[int, int]],
-        staggering: Union[float, List] = 0,
+        coordinates: dict[str, tuple[int, int]],
+        staggering: float | list = 0,
         horizontal_pitch=1,
         vertical_pitch=1,
     ):
-        """
-        Parameters
+        """Parameters
         ----------
         coordinates
             A dictionary specifying the (row, col) location of each character. The origin is
@@ -48,35 +53,33 @@ class Keyboard(collections.UserDict):
             The horizontal distance between the center of two adjacent keys.
         vertical_pitch
             The vertical distance between the center of two adjacent keys.
+
         """
         if isinstance(staggering, list):
             staggering = list(itertools.accumulate(staggering, initial=0))
 
-        return cls(
-            {
-                char: complex(
-                    i * vertical_pitch,
-                    j * horizontal_pitch
-                    + (
-                        staggering[i]
-                        if isinstance(staggering, list)
-                        else i * staggering
-                    ),
-                )
-                for char, (i, j) in coordinates.items()
-            }
-        )
+        return cls({
+            char: complex(
+                i * vertical_pitch,
+                j * horizontal_pitch
+                + (
+                    staggering[i]
+                    if isinstance(staggering, list)
+                    else i * staggering
+                ),
+            )
+            for char, (i, j) in coordinates.items()
+        })
 
     @classmethod
     def from_grid(
         cls,
         grid: str,
-        staggering: Union[float, List] = 0,
+        staggering: float | list = 0,
         horizontal_pitch=1,
         vertical_pitch=1,
     ):
-        """
-        Parameters
+        """Parameters
         ----------
         grid
             A keyboard layout specified as a grid separated by spaces. See the examples to
@@ -90,11 +93,14 @@ class Keyboard(collections.UserDict):
             The horizontal distance between the center of two adjacent keys.
         vertical_pitch
             The vertical distance between the center of two adjacent keys.
+
         """
         return cls.from_coordinates(
             coordinates={
                 char: (i, j)
-                for i, row in enumerate(filter(len, textwrap.dedent(grid).splitlines()))
+                for i, row in enumerate(
+                    filter(len, textwrap.dedent(grid).splitlines())
+                )
                 for j, char in enumerate(row[::2])
                 if char
             },
@@ -112,6 +118,3 @@ class Keyboard(collections.UserDict):
             rows[i].extend([" "] * (j - len(rows[i])))
             rows[i].append(reverse_layout[i, j])
         return "\n".join(" ".join(row) for row in rows)
-
-
-
