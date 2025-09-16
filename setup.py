@@ -6,7 +6,7 @@ from pathlib import Path
 from setuptools import find_packages, setup
 
 # allow setup.py to be run from any path
-os.chdir(os.path.normpath(Path.resolve(__file__) / os.pardir))
+os.chdir(Path(__file__).resolve().parent)
 
 setup(
     name="human_typer",
