@@ -1,10 +1,12 @@
+![human_typer](https://socialify.git.ci/UnMars/human_typer/image?forks=1&language=1&name=1&owner=1&stargazers=1&theme=Light)
+
 # Human Typer
 
 Python package to simulate human keyboard typing
 
 ## Installation
 
-Use the package manager [pip](https://pypi.org/project/human_typer/) to install human-typer.
+Use the package manager [pip](https://pypi.org/project/human_typer/) to install human_typer.
 
 ```bash
 pip install human_typer
