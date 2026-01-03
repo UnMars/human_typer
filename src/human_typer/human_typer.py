@@ -23,6 +23,7 @@ class Human_typer:
         - keyboard_layout : str = "qwerty" or "azerty" (default:qwerty)
         - average_cpm : float (default:190 (Median CPM))
         - element_type : str = "selenium" or "playwright" (default:selenium)
+        - error_rate : float (default:0.02) - Base error rate for typos (0.01 = 1% typos)
 
     Example :
     ```python
@@ -33,6 +34,9 @@ class Human_typer:
 
     # Playwright mode
     My_Typer = Human_typer("azerty", 70, element_type="playwright")
+
+    # Custom higher error rate
+    My_Typer = Human_typer("qwerty", 190, error_rate=0.05)
     ```
     """
 
@@ -41,12 +45,14 @@ class Human_typer:
         keyboard_layout: str = "qwerty",
         average_cpm: float = 190,
         element_type: str = "selenium",
+        error_rate: float = 0.02,
     ) -> None:
         self.cpm_range = (
             round(60 / (3.2 * average_cpm), 3),
             round(60 / (0.8 * average_cpm), 3),
         )
         self.element_type = element_type
+        self.error_rate = error_rate
         if self.element_type not in {"selenium", "playwright"}:
             raise ValueError("element_type must be 'selenium' or 'playwright'")
         if self.element_type == "playwright" and not PLAYWRIGHT_AVAILABLE:
@@ -129,7 +135,7 @@ class Human_typer:
 
     def make_voluntary_error(self, text: str) -> str and list:
         """Generate errors in the given text"""
-        number_of_errors = round(len(text) * 0.02 * randint(1, 10))
+        number_of_errors = round(len(text) * self.error_rate * randint(1, 10))
         errors_index_list, modification_list = [], []
         for _ in range(number_of_errors):
             errors_index_list.append(randint(0, len(text) - 1))

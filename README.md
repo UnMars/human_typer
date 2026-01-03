@@ -32,6 +32,9 @@ My_Typer.keyboard_type("my text")
 my_element = driver.find_element_by_id("ID")
 My_Typer.type_in_element("my text", my_element)
 
+# With optional custom typo error rate (default is 0.02 = 2% of every character typed)
+My_Typer = Human_typer(keyboard_layout = "qwerty", average_cpm = 190, error_rate = 0.05)
+
 # With a Playwright element (requires: pip install human_typer[playwright])
 from playwright.sync_api import sync_playwright
 
